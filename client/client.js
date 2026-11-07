@@ -217,7 +217,7 @@ var import_react = require("react");
 var primitives2 = __toESM(require("@deepseek-ai/dsh-client-ui-primitives"), 1);
 
 // client/mobile/nav-targets.mjs
-var DRAWER_SELECTOR = '[data-mobile-nav="frame"] > :first-child';
+var DRAWER_SELECTOR = '[data-mobile-nav="frame"] > [class*="_sidebarCol"]';
 var TOGGLE_SELECTOR = '[data-mobile-nav="toggle"]';
 var NAV_TARGETS = [
   "button[data-dsh-taskboard-entry]",
@@ -813,17 +813,23 @@ var MOBILE_CSS = `
     padding-top: env(safe-area-inset-top, 0px) !important;
   }
 
-  /* \u4E3B\u5185\u5BB9\u5217\uFF08\u7B2C 2 \u4E2A\u7F51\u683C\u5B50\u5143\u7D20\uFF09\u5728\u5B98\u65B9\u6837\u5F0F\u91CC\u6709\u663E\u5F0F grid-column: 2\u2014\u2014
-     \u7F51\u683C\u88AB\u538B\u7F29\u6210 [1fr, 0, 0] \u540E\u5B83\u4F1A\u843D\u5728 0px \u7684\u7B2C 2 \u8F68\uFF0C\u6574\u4E2A\u4E3B\u754C\u9762\u88AB\u6324\u51FA
-     \u89C6\u53E3\uFF08\u53EA\u5269\u80CC\u666F\u56FE\uFF09\u3002\u5FC5\u987B\u663E\u5F0F\u628A\u5B83\u62C9\u56DE\u7B2C 1 \u8F68\uFF08issue #5\uFF09\u3002
-     \u7B2C 3 \u5217\uFF08details\uFF09\u4FDD\u6301 0 \u8F68\u5373\u53EF\uFF0C\u65E0\u9700\u5904\u7406\u3002 */
-  [data-mobile-nav="frame"] > :nth-child(2) {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
+  /* 0.2.2 \u7684 AppFrame \u628A\u4E3B\u5185\u5BB9\u5217\u56FA\u5B9A\u5728\u7B2C\u4E8C\u4E2A grid \u8F68\u9053\uFF1B\u672C\u63D2\u4EF6\u53EA\u4FDD\u7559\u4E00\u6761
+     1fr \u5185\u5BB9\u8F68\u9053\uFF0C\u56E0\u6B64\u5FC5\u987B\u6309\u5B98\u65B9 centerCol \u7C7B\u540D\u628A\u5B83\u62C9\u56DE\u7B2C\u4E00\u8F68\u3002\u4E0D\u80FD\u518D\u7528
+     \u4F4D\u7F6E\u9009\u62E9\u5668\uFF1A0.2.2 \u4F1A\u5728\u62BD\u5C49\u6001\u5148\u63D2\u5165\u539F\u751F\u906E\u7F69\uFF0C\u4F4D\u7F6E\u9009\u62E9\u5668\u4F1A\u628A\u906E\u7F69\u6216
+     \u4FA7\u680F\u5F53\u6210\u4E3B\u5185\u5BB9\uFF0C\u4F7F\u4F1A\u8BDD\u533A\u843D\u5230 0 \u5BBD\u8F68\u9053\u800C\u6574\u9875\u767D\u5C4F\u3002 */
+  [data-mobile-nav="frame"] > [class*="_centerCol"] {
+    grid-area: 1 / 1 / 2 / 2 !important;
     min-width: 0 !important;
   }
 
-  /* The sidebar column (first grid child) becomes a left drawer. The drawer
+  /* 0.2.2 \u7684\u539F\u751F\u62BD\u5C49\u906E\u7F69\u4E5F\u662F frame \u7684\u5B50\u5143\u7D20\uFF0C\u4F46\u672C\u63D2\u4EF6\u5DF2\u6709\u81EA\u5DF1\u7684 backdrop\uFF0C
+     \u5E76\u8D1F\u8D23\u62BD\u5C49\u5916\u7684\u70B9\u51FB\u5173\u95ED\u3002\u4FDD\u7559\u539F\u751F\u906E\u7F69\u4F1A\u4E0E\u672C\u63D2\u4EF6\u906E\u7F69\u53E0\u52A0\uFF0C\u4E14\u53EF\u80FD\u62A2\u8D70
+     \u4F4D\u7F6E\u951A\u70B9\uFF0C\u56E0\u6B64\u9690\u85CF\u5BBF\u4E3B\u906E\u7F69\uFF0C\u4EC5\u4FDD\u7559\u63D2\u4EF6\u81EA\u5DF1\u7684\u5C42\u3002 */
+  [data-mobile-nav="frame"] > [class*="_drawerMask"] {
+    display: none !important;
+  }
+
+  /* The sidebar column (officially carrying the sidebarCol class) becomes a left drawer. The drawer
      hugs the sidebar content exactly (the wide sidebar carries an inline
      width, ~280px): a fixed 92vw box would leave a white strip where the
      container background shows beside the content.
@@ -846,7 +852,7 @@ var MOBILE_CSS = `
      #67: that mask sat on top of the 600 drawer and ate every tap). Still
      far under the fixed-position banners/toasts (z 9999) that float at the
      viewport level. */
-  [data-mobile-nav="frame"] > :first-child {
+  [data-mobile-nav="frame"] > [class*="_sidebarCol"] {
     position: absolute !important;
     inset: 0 auto 0 0 !important;
     width: max-content !important;
@@ -876,7 +882,7 @@ var MOBILE_CSS = `
      overflow:hidden drawer to scrollLeft=102, and every static child (plus the
      fixed overlay) shifts 102px off-screen. With transform:none the overlay is
      viewport-anchored: it dims the full screen and the sheet sits at left:8. */
-  [data-mobile-nav="frame"]:not([data-sidebar-collapsed]) > :first-child {
+  [data-mobile-nav="frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] {
     transform: none !important;
   }
 

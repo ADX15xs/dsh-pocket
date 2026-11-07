@@ -2,10 +2,11 @@
 // 引入（client 侧是 esbuild 打进 bundle 的，测试里没有 DOM 可用）。
 
 /**
- * 抽屉本体：AppFrame 的第一个网格子元素，即被拉成抽屉的侧边栏列。
+ * 抽屉本体：官方 AppFrame 的侧栏列。DSH 0.2.2 在抽屉态会先插入原生遮罩，
+ * 不能再按第一个子元素查找。
  * @type {string}
  */
-export const DRAWER_SELECTOR = '[data-mobile-nav="frame"] > :first-child'
+export const DRAWER_SELECTOR = '[data-mobile-nav="frame"] > [class*="_sidebarCol"]'
 
 /** 抽屉开关（会话头部那颗按钮）——点它不该被"点抽屉外就关"二次触发。 */
 export const TOGGLE_SELECTOR = '[data-mobile-nav="toggle"]'

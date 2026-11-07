@@ -84,7 +84,7 @@ test('浮层内的点击被识别为 overlay（不该关抽屉）—— issue #7
 
 test('选择器常量与 MobileNavOverlay 的用法保持一致', () => {
   const src = readFileSync(new URL('../client/mobile/MobileNavOverlay.tsx', import.meta.url), 'utf8');
-  assert.equal(DRAWER_SELECTOR, '[data-mobile-nav="frame"] > :first-child');
+  assert.equal(DRAWER_SELECTOR, '[data-mobile-nav="frame"] > [class*="_sidebarCol"]');
   assert.equal(TOGGLE_SELECTOR, '[data-mobile-nav="toggle"]');
   assert.ok(
     src.includes("document.querySelector<HTMLElement>(DRAWER_SELECTOR)"),
@@ -126,7 +126,7 @@ test('抽屉层级压过 dsh-web-ui-all 的移动端遮罩 —— issue #67', ()
   // web-ui-all 0.3.6 的移动端响应式：sidebar pane 1100 / details pane 1000 /
   // frame ::after 全屏遮罩 1050。抽屉必须高于 1100，否则那层遮罩会盖在抽屉
   // 上吃掉每一次点击 —— 抽屉能开，但里面什么都点不动，页面也滚不了。
-  const drawerBlock = css.slice(css.indexOf('> :first-child {'));
+  const drawerBlock = css.slice(css.indexOf('[class*="_sidebarCol"] {'));
   const z = drawerBlock.match(/z-index:\s*(\d+)\s*!/);
   assert.ok(z, '抽屉必须显式声明 z-index !important');
   assert.ok(
@@ -156,9 +156,20 @@ test('移除 web-ui-all 在 frame 上的全屏 ::after 遮罩 —— issue #67',
 test('打包产物里带上抽屉规则的关键字', () => {
   const bundle = readFileSync(new URL('../client/client.js', import.meta.url), 'utf8');
   // client/client.js 是 esbuild 产物，跑测试前需先 npm run build:client
-  for (const needle of ['sessionRow', 'searchResultWorkspace', 'role="menu"', 'pointerType']) {
+  for (const needle of ['sessionRow', 'searchResultWorkspace', 'role="menu"', 'pointerType', 'class*="_centerCol"', 'class*="_sidebarCol"', 'class*="_drawerMask"']) {
     assert.ok(bundle.includes(needle), `打包产物缺少 "${needle}" —— 先跑 npm run build:client`);
   }
+});
+
+test('DSH 0.2.2 AppFrame 抽屉遮罩插入后仍保持主内容可见', () => {
+  const css = readFileSync(new URL('../client/mobile/mobile.css.ts', import.meta.url), 'utf8');
+  assert.match(css, /\[data-mobile-nav="frame"\] > \[class\*="_centerCol"\]/, '主内容必须按官方列名定位');
+  assert.match(css, /\[data-mobile-nav="frame"\] > \[class\*="_sidebarCol"\]/, '抽屉必须按官方侧栏列名定位');
+  assert.match(css, /\[data-mobile-nav="frame"\] > \[class\*="_drawerMask"\]/, '必须隐藏 0.2.2 插入的原生遮罩');
+  assert.ok(
+    !/\[data-mobile-nav="frame"\] > :first-child|\[data-mobile-nav="frame"\] > :nth-child\(2\)/.test(css),
+    '不能再用 DOM 位置选择器，否则会被原生 drawerMask 错配',
+  );
 });
 
 test('手机端右边栏默认显示，设置关闭后隐藏稳定 header corner 入口', () => {

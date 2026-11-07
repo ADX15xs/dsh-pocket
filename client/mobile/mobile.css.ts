@@ -184,17 +184,23 @@ export const MOBILE_CSS = `
     padding-top: env(safe-area-inset-top, 0px) !important;
   }
 
-  /* 主内容列（第 2 个网格子元素）在官方样式里有显式 grid-column: 2——
-     网格被压缩成 [1fr, 0, 0] 后它会落在 0px 的第 2 轨，整个主界面被挤出
-     视口（只剩背景图）。必须显式把它拉回第 1 轨（issue #5）。
-     第 3 列（details）保持 0 轨即可，无需处理。 */
-  [data-mobile-nav="frame"] > :nth-child(2) {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
+  /* 0.2.2 的 AppFrame 把主内容列固定在第二个 grid 轨道；本插件只保留一条
+     1fr 内容轨道，因此必须按官方 centerCol 类名把它拉回第一轨。不能再用
+     位置选择器：0.2.2 会在抽屉态先插入原生遮罩，位置选择器会把遮罩或
+     侧栏当成主内容，使会话区落到 0 宽轨道而整页白屏。 */
+  [data-mobile-nav="frame"] > [class*="_centerCol"] {
+    grid-area: 1 / 1 / 2 / 2 !important;
     min-width: 0 !important;
   }
 
-  /* The sidebar column (first grid child) becomes a left drawer. The drawer
+  /* 0.2.2 的原生抽屉遮罩也是 frame 的子元素，但本插件已有自己的 backdrop，
+     并负责抽屉外的点击关闭。保留原生遮罩会与本插件遮罩叠加，且可能抢走
+     位置锚点，因此隐藏宿主遮罩，仅保留插件自己的层。 */
+  [data-mobile-nav="frame"] > [class*="_drawerMask"] {
+    display: none !important;
+  }
+
+  /* The sidebar column (officially carrying the sidebarCol class) becomes a left drawer. The drawer
      hugs the sidebar content exactly (the wide sidebar carries an inline
      width, ~280px): a fixed 92vw box would leave a white strip where the
      container background shows beside the content.
@@ -217,7 +223,7 @@ export const MOBILE_CSS = `
      #67: that mask sat on top of the 600 drawer and ate every tap). Still
      far under the fixed-position banners/toasts (z 9999) that float at the
      viewport level. */
-  [data-mobile-nav="frame"] > :first-child {
+  [data-mobile-nav="frame"] > [class*="_sidebarCol"] {
     position: absolute !important;
     inset: 0 auto 0 0 !important;
     width: max-content !important;
@@ -247,7 +253,7 @@ export const MOBILE_CSS = `
      overflow:hidden drawer to scrollLeft=102, and every static child (plus the
      fixed overlay) shifts 102px off-screen. With transform:none the overlay is
      viewport-anchored: it dims the full screen and the sheet sits at left:8. */
-  [data-mobile-nav="frame"]:not([data-sidebar-collapsed]) > :first-child {
+  [data-mobile-nav="frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] {
     transform: none !important;
   }
 
