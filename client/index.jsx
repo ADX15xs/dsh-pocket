@@ -1,20 +1,18 @@
 // dsh-pocket 网页客户端：
-//   1. 设置页签「手机访问」（局域网/公网二维码 + 更新/重启提示）
-//   2. 移动端适配（移植自 MIT 项目 dsh-web-mobile，见 client/mobile/LICENSE.dsh-web-mobile）
+//   设置页签「手机访问」（局域网/公网二维码 + 更新/重启提示）
 //
-// 手机扫码打开的就是电脑上的 dsh web，实时同步；窄屏自动变成抽屉布局。
+// 手机扫码打开的就是电脑上的 dsh web，实时同步；移动端布局完全交给官方实现。
 //
 // 注：Web Push 已移除——浏览器推送依赖 Google FCM（Chrome）等境外服务，
 // 国内直连被墙，普通用户用不了。专注扫码同屏这一件事。
 
 import { createElement as h, useEffect, useRef, useState } from 'react';
 
-import { POCKET_RPC_CHANNEL, POCKET_ENDPOINTS, MOBILE_RIGHTBAR_ATTRIBUTE, MOBILE_RIGHTBAR_EVENT, redactStatus, compareVersions } from './api.js';
-import { mobileApply } from './mobile/mobile-apply.tsx';
+import { POCKET_RPC_CHANNEL, POCKET_ENDPOINTS, redactStatus, compareVersions } from './api.js';
 import { NS as POCKET_NS, zh as POCKET_ZH, en as POCKET_EN } from './pocket-locales.js';
 
 const name = 'dsh-pocket';
-const inject = ['slots', 'connection', 'layout', 'locale', 'sessionLogDownload'];
+const inject = ['slots', 'connection', 'locale'];
 
 // 词典在 pocket-locales.js；这里只做「取 key → 替换 {占位符} → 字符串」。
 // 不依赖 DSH t() 的插值能力，避免行为不一致。
@@ -44,12 +42,6 @@ const styles = {
   warn: { color: 'var(--dsw-alias-state-warn-primary,#b45309)', fontSize: 12, lineHeight: 1.5 },
 };
 
-function applyMobileRightbarSetting(enabled) {
-  const on = enabled !== false;
-  document.body?.setAttribute(MOBILE_RIGHTBAR_ATTRIBUTE, on ? 'on' : 'off');
-  window.dispatchEvent(new CustomEvent(MOBILE_RIGHTBAR_EVENT, { detail: { enabled: on } }));
-}
-
 function PocketSettingsTab({ rpcCall, t }) {
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -77,7 +69,6 @@ function PocketSettingsTab({ rpcCall, t }) {
     try {
       const s = await call(POCKET_ENDPOINTS.status, {});
       setStatus(s);
-      applyMobileRightbarSetting(s.mobileRightbarEnabled);
       setTunnelState(s.tunnelState ?? null);
       if (s.desktop) setIsDesktop(true);
       if (s.restartNotice) {
@@ -237,7 +228,6 @@ function PocketSettingsTab({ rpcCall, t }) {
     try {
       const next = await call(POCKET_ENDPOINTS.pocketReset, { confirm: true });
       setStatus(next);
-      applyMobileRightbarSetting(next.mobileRightbarEnabled);
       setTunnelCfg(null);
       setCustomPin(null);
       setAdvOpen(false);
@@ -264,17 +254,6 @@ function PocketSettingsTab({ rpcCall, t }) {
       const r = await call(POCKET_ENDPOINTS.lanAuthSetEnabled, { on });
       setStatus((s) => ({ ...s, lanAuthEnabled: r.lanAuthEnabled }));
     } catch { /* 忽略 */ }
-  };
-
-  const setMobileRightbar = async (on) => {
-    try {
-      const r = await call(POCKET_ENDPOINTS.mobileRightbarSetEnabled, { on });
-      const enabled = r.mobileRightbarEnabled === true;
-      setStatus((s) => ({ ...s, mobileRightbarEnabled: enabled }));
-      applyMobileRightbarSetting(enabled);
-    } catch (err) {
-      setError(err.message);
-    }
   };
 
   // 局域网访问总开关：关闭后局域网扫码/链接直接失效（公网不受影响）。
@@ -576,14 +555,6 @@ function PocketSettingsTab({ rpcCall, t }) {
         : null,
     ),
 
-    h('div', { style: styles.block },
-      row(
-        t('mobileRightbar'),
-        Switch(status?.mobileRightbarEnabled !== false, () => setMobileRightbar(status?.mobileRightbarEnabled === false)),
-        h('div', { style: { ...styles.muted, marginTop: 6 } }, t('mobileRightbarHint')),
-      ),
-    ),
-
     error ? h('div', { style: { color: 'var(--dsw-alias-state-error-primary,#dc2626)', fontSize: 12, marginTop: 8 } }, `❌ ${errText(error)}`) : null,
 
     // 恢复出厂设置：设置出问题时的临时兜底（最底部，避免误触）
@@ -665,10 +636,6 @@ export function apply(ctx) {
       try { ctx.connection.isLoopback = true; } catch { /* 忽略 */ }
     }
   }
-
-  // 移动端适配（dsh-web-mobile 移植）：抽屉布局/触控/安全区，仅窄屏生效
-  mobileApply(ctx);
-
   const rpcCall = (endpoint, payload, signal) =>
     ctx.connection.rpc.call(POCKET_RPC_CHANNEL, endpoint, payload, signal);
 

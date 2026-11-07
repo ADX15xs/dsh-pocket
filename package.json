@@ -1,6 +1,6 @@
 {
   "name": "dsh-pocket",
-  "description": "把 DeepSeek Harness 装进你的口袋：一个包、一个设置页，手机扫码即同步访问电脑上的 DSH（局域网 + 公网，实时同屏）。",
+  "description": "把 DeepSeek Harness 装进你的口袋：一个包、一个设置页，局域网或公网访问电脑上的 DSH。",
   "type": "module",
   "main": "lib/index.js",
   "bin": {
@@ -49,7 +49,6 @@
     "deepseek-harness",
     "dsh",
     "dsh-plugin",
-    "mobile",
     "remote",
     "qr",
     "tunnel"
@@ -62,9 +61,7 @@
       "inject": [
         "@deepseek-ai/dsh-client-connection",
         "@deepseek-ai/dsh-client-ui-slots",
-        "@deepseek-ai/dsh-client-ui-layout",
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-session-log-export"
+        "@deepseek-ai/dsh-client-locale"
       ],
       "platform": "web"
     }
