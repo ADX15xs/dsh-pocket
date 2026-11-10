@@ -290,6 +290,43 @@ var en = {
   "feedback": "\u{1F64F} Questions? Open an issue on GitHub"
 };
 
+// client/mobile-enter.js
+var MOBILE_UA = /Android|iPhone|iPad|iPod/i;
+var MENU_HIGHLIGHT_SELECTOR = '[data-trigger-menu] [aria-activedescendant], [data-trigger-menu] [role="option"][aria-selected="true"]';
+function installMobileEnter(env = globalThis) {
+  const doc = env.document;
+  if (!doc || doc.documentElement.dataset.dshpMobileEnter === "1") return;
+  doc.documentElement.dataset.dshpMobileEnter = "1";
+  const isTouch = () => (env.matchMedia?.("(pointer: coarse)").matches ?? false) || MOBILE_UA.test(env.navigator?.userAgent ?? "") || env.navigator?.platform === "MacIntel" && (env.navigator?.maxTouchPoints ?? 0) > 1;
+  const menuHasHighlight = () => doc.querySelector(MENU_HIGHLIGHT_SELECTOR) !== null;
+  let compositionEndAt = 0;
+  doc.addEventListener("compositionend", (e) => {
+    if (e.target instanceof env.Element && e.target.closest("[data-composer-input]")) {
+      compositionEndAt = Date.now();
+    }
+  }, true);
+  doc.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.isComposing || event.keyCode === 229) return;
+    if (Date.now() - compositionEndAt < 50) return;
+    if (!(event.target instanceof env.Element)) return;
+    const editor = event.target.closest('[data-composer-input][contenteditable="true"]');
+    if (!editor || !editor.closest("[data-composer-card]")) return;
+    if (!isTouch()) return;
+    if (menuHasHighlight()) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    editor.dispatchEvent(new env.KeyboardEvent("keydown", {
+      key: "Enter",
+      code: event.code,
+      bubbles: true,
+      cancelable: true,
+      shiftKey: true,
+      repeat: event.repeat
+    }));
+  }, true);
+}
+
 // client/index.jsx
 var name = "dsh-pocket";
 var inject = ["slots", "connection", "locale"];
@@ -946,6 +983,7 @@ function PocketSettingsTab({ rpcCall, t }) {
   );
 }
 function apply(ctx) {
+  installMobileEnter();
   if (ctx?.connection) {
     try {
       Object.defineProperty(ctx.connection, "isLoopback", { value: true, writable: true, configurable: true });
