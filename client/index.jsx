@@ -10,6 +10,7 @@ import { createElement as h, useEffect, useRef, useState } from 'react';
 
 import { POCKET_RPC_CHANNEL, POCKET_ENDPOINTS, redactStatus, compareVersions } from './api.js';
 import { NS as POCKET_NS, zh as POCKET_ZH, en as POCKET_EN } from './pocket-locales.js';
+import { installMobileEnter } from './mobile-enter.js';
 
 const name = 'dsh-pocket';
 const inject = ['slots', 'connection', 'locale'];
@@ -625,6 +626,9 @@ function PocketSettingsTab({ rpcCall, t }) {
 }
 
 export function apply(ctx) {
+  // 触屏设备上 composer 裸 Enter=换行（发送走按钮）——见 mobile-enter.js
+  installMobileEnter();
+
   // 兜底：确保 connection.isLoopback 为 true（issue #58）。
   // 注：代理注入的 loopback 补丁（proxy.mjs LOOPBACK_ENV_PATCH）已在 #105 移除——
   // 它与 DSH Desktop 2.0.4+ 客户端运行时不兼容，会令 BootHandoff 阶段白屏。
